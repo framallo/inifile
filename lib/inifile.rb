@@ -1,3 +1,4 @@
+require 'orderedhash'
 #
 # This class represents the INI file and can be used to parse, modify,
 # and write INI files.
@@ -43,7 +44,7 @@ class IniFile
     @fn = filename
     @comment = opts[:comment] || ';#'
     @param = opts[:parameter] || '='
-    @ini = Hash.new {|h,k| h[k] = Hash.new}
+    @ini = OrderedHash.new {|h,k| h[k] = OrderedHash.new}
 
     @rgxp_comment = %r/\A\s*\z|\A\s*[#{@comment}]/
     @rgxp_section = %r/\A\s*\[([^\]]+)\]/o
@@ -223,7 +224,7 @@ class IniFile
   #
   def dup
     other = super
-    other.instance_variable_set(:@ini, Hash.new {|h,k| h[k] = Hash.new})
+    other.instance_variable_set(:@ini, OrderedHash.new {|h,k| h[k] = OrderedHash.new})
     @ini.each_pair {|s,h| other[s].merge! h}
     other.taint if self.tainted?
     other
