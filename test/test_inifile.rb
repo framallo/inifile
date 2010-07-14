@@ -330,6 +330,11 @@ class TestIniFile < Test::Unit::TestCase
     ini_file[:foo] = {}
     assert_equal ini_file["foo"], {}
   end
+  
+  def test_order
+    sections = ["section_one", "section_two", "section three", "section_four", "section_five"]
+    assert_equal sections, @ini_file.sections
+  end
 end
 
 # EOF

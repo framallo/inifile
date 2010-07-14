@@ -44,6 +44,7 @@ class IniFile
     @comment = opts[:comment] || ';#'
     @param = opts[:parameter] || '='
     @ini = Hash.new {|h,k| h[k] = Hash.new}
+    @ordered_sections = Array.new
 
     @rgxp_comment = %r/\A\s*\z|\A\s*[#{@comment}]/
     @rgxp_section = %r/\A\s*\[([^\]]+)\]/o
@@ -110,7 +111,8 @@ class IniFile
   #
   def each
     return unless block_given?
-    @ini.each do |section,hash|
+    @ordered_sections.each do |section| 
+      hash = @ini[section]
       hash.each do |param,val|
         yield section, param, val
       end
@@ -127,7 +129,7 @@ class IniFile
   #
   def each_section
     return unless block_given?
-    @ini.each_key {|section| yield section}
+    @ordered_sections.each {|section| yield section}
     self
   end
 
@@ -140,6 +142,7 @@ class IniFile
   # returns +nil+.
   #
   def delete_section( section )
+    @ordered_sections.delete(section.to_s)
     @ini.delete section.to_s
   end
 
@@ -152,6 +155,7 @@ class IniFile
   #
   def []( section )
     return nil if section.nil?
+    add_section(section.to_s) unless has_section?(section.to_s)
     @ini[section.to_s]
   end
 
@@ -182,7 +186,7 @@ class IniFile
   # Returns an array of the section names.
   #
   def sections
-    @ini.keys
+    @ordered_sections
   end
 
   #
@@ -290,7 +294,9 @@ class IniFile
         when @rgxp_comment; next
 
         # this is a section declaration
-        when @rgxp_section; section = @ini[$1.strip]
+        when @rgxp_section
+          section = @ini[$1.strip]
+          add_section($1.strip)
 
         # otherwise we have a parameter
         when @rgxp_param
@@ -306,7 +312,16 @@ class IniFile
       end  # while
     end  # File.open
   end
-
+  
+  
+  # 
+  # add a new section in the ordered_sections array to keep the original section's INI order
+  #
+  def add_section(section)
+    @ordered_sections.delete(section.to_s)
+    @ordered_sections << section.to_s
+  end
+  
 end  # class IniFile
 
 # EOF
